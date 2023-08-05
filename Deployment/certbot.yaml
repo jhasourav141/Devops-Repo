@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: certbot-renew
+spec:
+  schedule: "0 0 * * * "
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: certbot
+            image: certbot/certbot:latest
+            command:
+            - /bin/sh
+            - -c
+            - |
+              apk add --no-cache py3-pip
+              pip install awscli certbot-dns-route53
+              certbot renew \
+                --dns-route53 \
+                --non-interactive \
+                --agree-tos \
+                --email souravk@coffeebeans.io 
+                --dns-route53-propagation-seconds 30
+            env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secret
+                  key: access-key
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secret
+                  key: secret-key
+          restartPolicy: OnFailure
