@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cb-xyz-backend
+  namespace: cb-xyz-dev
+spec:
+  minReadySeconds: 15
+  selector:
+    matchLabels:
+      app : cb-xyz-backend
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      name: cb-xyz-backend
+      labels:
+        app: cb-xyz-backend
+    spec:
+      containers:
+      - name: cb-xyz-backend
+        image:  INPUT_PARAMS
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: xyz-backend-config-map
+        volumeMounts:
+        - name: shared-data
+          mountPath: /app/static
+      - name: nginx
+        image: nginx:1.22
+        volumeMounts:
+        - name: shared-data
+          mountPath: /app/static
+        - name: default-conf
+          mountPath: /etc/nginx/conf.d/
+
+      nodeSelector:
+        Group: cb-service
+      volumes:
+      - name: shared-data
+        emptyDir: {}
+      - name: default-conf
+        configMap:
+          name: cst-backend-nginx
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cb-xyz-backend
+  namespace: cb-xyz-dev
+spec:
+  selector:
+    app : cb-xyz-backend
+  ports:
+    - name: http
+      port: 80
+  type: ClusterIP
+
+
+
+

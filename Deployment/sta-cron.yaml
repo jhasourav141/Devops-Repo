@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: xyz-import-users
+  namespace: cb-xyz-prod
+spec:
+  jobTemplate:
+    metadata:
+      labels:
+        l1: xyz-import-users
+      name: xyz-import-users
+    spec:
+      template:
+        spec:
+          containers:
+          - image: xyz.azurecr.io/xyz-backend-import-users-cj:101
+            name: xyz-import-users
+            envFrom:
+            - configMapRef:
+                name: xyz-backend-config-map
+          restartPolicy: Never
+  schedule: 0 0 * * *

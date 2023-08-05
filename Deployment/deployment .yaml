@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-dev
+  namespace: xyz-dev
+spec:
+  selector:
+    matchLabels:
+      app: backend-dev
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: backend-dev
+    spec:
+      containers:
+      - name: xyz-be-dev
+        image: DEV_BACKEND
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 1337
+        envFrom:
+        - configMapRef:
+            name: xyz-config-be
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-dev
+  namespace: xyz-dev
+spec:
+  selector:
+    app: backend-dev
+  ports:
+    - name: http
+      port: 1337
+  type: ClusterIP
