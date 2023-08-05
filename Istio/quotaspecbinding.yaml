@@ -1,0 +1,13 @@
+apiVersion: config.istio.io/v1alpha2
+kind: QuotaSpecBinding
+metadata:
+  name: global-quotaspec-binding
+  namespace: istio-system
+spec:
+  quotaSpecs:
+  - name: global-quotaspec
+    namespace: istio-system
+  # Add more targets (services, workloads) as needed
+  # targets:
+  # - service: my-service
+  #   namespace: my-namespace
