@@ -1,0 +1,41 @@
+pipeline {
+    // ... (other stages and environment variables)
+
+    stages {
+        // ... (other stages)
+
+        stage('Update K8S manifest & push to Repo') {
+            steps {
+                script {
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'cred-name', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        // Authenticate with AWS ECR
+                        sh '''
+                            #!/bin/bash -x
+                            aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com
+                            '''
+                    }
+
+                    // Update the Kubernetes deployment YAML file
+                    sh '''
+                        #!/bin/bash
+                        sed -i "s,DEV_BACKEND,${REPOSITORY_URI}:${IMAGE_TAG}," ./manifest/dev/dev-be-deployment.yaml
+                        '''
+
+                    // Commit and push the changes to the EKS manifest repository
+                    sh '''
+                        #!/bin/bash
+                        git config --global user.email "jenkins@example.com"
+                        git config --global user.name "Jenkins"
+                        git add ./manifest/dev/dev-be-deployment.yaml
+                        git commit -m 'Update image tag in Kubernetes deployment'
+                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@gitlab.com/Repo/eks-manifest.git HEAD:main
+                        '''
+                }
+            }
+        }
+
+        // ... (other stages)
+    }
+
+    // ... (post section)
+}
