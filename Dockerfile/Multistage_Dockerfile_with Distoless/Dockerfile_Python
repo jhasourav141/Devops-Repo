@@ -1,0 +1,23 @@
+# Stage 1: Build the Python application
+FROM python:3.9 AS builder
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the application code and requirements file into the container
+COPY app.py requirements.txt ./
+
+# Install application dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Stage 2: Create a production-ready image
+FROM gcr.io/distroless/python3-debian10
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the application code and dependencies from the builder stage
+COPY --from=builder /app .
+
+# Specify the command to run the Python application
+CMD ["app.py"]

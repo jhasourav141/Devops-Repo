@@ -1,0 +1,24 @@
+# Stage 1: Build the Node.js application
+FROM node:14 AS builder
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the application code and package.json/package-lock.json into the container
+COPY package*.json ./
+COPY app.js ./
+
+# Install application dependencies
+RUN npm install
+
+# Stage 2: Create a production-ready image
+FROM gcr.io/distroless/nodejs
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the application code and dependencies from the builder stage
+COPY --from=builder /app .
+
+# Specify the command to run the Node.js application
+CMD ["app.js"]
