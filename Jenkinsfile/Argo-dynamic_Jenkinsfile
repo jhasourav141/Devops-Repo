@@ -1,0 +1,37 @@
+pipeline {
+    // ... (other stages and environment variables)
+
+    stages {
+        // ... (other stages)
+
+        stage('Update and Push Manifest') {
+            steps {
+                script {
+                    // Clone the GitOps repository
+                    checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://gitlab.com/your-gitops-repo.git', credentialsId: 'your-credentials']]])
+
+                    // Dynamically update the deployment manifest with the new image tag
+                    def newImageTag = "your-new-image-tag"
+                    sh """
+                        #!/bin/bash
+                        sed -i 's|image:.*|image: ${REPOSITORY_URI}:${IMAGE_TAG}|' path/to/deployment.yaml
+                    """
+                    
+                    // Commit and push the updated manifest to the GitOps repository
+                    sh """
+                        #!/bin/bash
+                        git config --global user.email "jenkins@example.com"
+                        git config --global user.name "Jenkins"
+                        git add path/to/deployment.yaml
+                        git commit -m 'Update image tag in deployment'
+                        git push origin main
+                    """
+                }
+            }
+        }
+
+        // ... (other stages)
+    }
+
+    // ... (post section)
+}
